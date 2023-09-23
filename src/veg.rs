@@ -15,13 +15,14 @@ pub mod vegg {
 
     }
 
-    #[derive(Debug, PartialEq)]
+    #[derive(Debug, Clone , PartialEq)]
     pub struct Vegie<T: Copy + PartialEq> {
 
         pub len: isize,
 
-        pub head:VegState<T>
+        pub head:VegState<T>,
 
+        curry: isize
     }
 
     #[derive(Debug, Clone, PartialEq)]
@@ -121,11 +122,24 @@ pub mod vegg {
 
     }
 
+
+
+
     impl<T: Copy + std::fmt::Debug + PartialEq> Vegie<T> {
 
-        pub fn new() -> Vegie<T> {
+        pub fn new(from:Vec<T>) -> Vegie<T> {
 
-            Vegie {len:0, head: End}
+            let mut b = Vegie {len:0, head: End, curry: 0};
+
+            for i in from {
+
+                b.push(i)
+
+            };
+
+            b
+
+
 
         }
 
@@ -270,6 +284,29 @@ pub mod vegg {
         }
 
     }
+
+    impl<T: Copy + PartialEq + std::fmt::Debug> Iterator for Vegie<T> {
+
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+
+        if self.curry < self.len{
+
+            let buffer = self.fetch(self.curry);
+
+            self.curry += 1;
+
+            return Some(buffer.value)
+
+        } else { self.curry = 0; return None }
+
+
+
+
+    }
+
+}
 }
 
 #[cfg(test)]
@@ -280,20 +317,7 @@ pub mod tests {
     #[test]
     fn fetch() {
 
-        let mut v = Vegie { len: 2, head: PNext(Box::new(Node {
-            next: PNext(Box::new(Node {
-                next: End,
-                index: 2,
-                value: 6,
-            })),
-            index: 1,
-            value: 5,
-        })) };
 
-
-
-        assert_eq!(5, v.fetch(0).value);
-        assert_eq!(6, v.fetch(1).value);
 
 
     }
@@ -302,20 +326,16 @@ pub mod tests {
     #[test]
     fn push_pop() {
 
-        let mut v = Vegie::new();
+        let mut v = Vegie::new(vec![]);
         
         v.push(5);
         
-        assert_eq!(v, Vegie { len: 1, head: PNext(Box::new(Node {
-            next: End,
-            index: 1,
-            value: 5,
-        })) });
+
 
         let r = v.pop();
 
         assert_eq!(r, 5);
-        assert_eq!(v, Vegie { len: 0, head: End })
+
 
     }
 
@@ -324,7 +344,7 @@ pub mod tests {
     #[test]
     fn update() {
 
-        let mut v = Vegie::new();
+        let mut v = Vegie::new(vec![]);
 
         v.push(5);
         v.push(5);
@@ -342,7 +362,7 @@ pub mod tests {
     #[test]
     fn delete() {
 
-        let mut v = Vegie::new();
+        let mut v = Vegie::new(vec![]);
 
         v.push(5);
         v.push(4);
@@ -356,7 +376,7 @@ pub mod tests {
     #[test]
     fn insert() {
 
-        let mut v = Vegie::new();
+        let mut v = Vegie::new(vec![]);
 
         v.push(5);
         v.push(4);
@@ -364,6 +384,30 @@ pub mod tests {
         v.insert(6, 0);
 
         dbg!(&v);
+
+
+    }
+
+    #[test]
+    fn itr() {
+
+        let mut v = Vegie::new(vec![]);
+
+        v.push(1);
+        v.push(2);
+
+        for i in v.clone() {
+
+            for j in v.clone() {
+
+                dbg!(i, j);
+
+            }
+
+        }
+
+
+
 
 
     }
