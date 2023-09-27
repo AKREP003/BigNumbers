@@ -379,7 +379,7 @@ mod dig {
 pub mod tests {
     use Veggies::vegg::Vegie;
     use crate::meth_with_more_digits::dig::*;
-    use crate::Vegie;
+
 
     #[test]
     fn n() {
@@ -446,3 +446,5 @@ pub mod tests {
 
 
 }
+
+fn main() {}
