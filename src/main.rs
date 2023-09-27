@@ -1,9 +1,7 @@
-mod veg;
 mod meth_with_more_digits;
 
 use std::ops::Add;
 use std::rc::Rc;
-use veg::vegg::*;
 
 
 

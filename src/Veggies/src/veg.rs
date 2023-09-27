@@ -1,7 +1,7 @@
 
 pub mod vegg {
     use std::ops::Deref;
-    use crate::veg::vegg::VegState::*;
+    use crate::vegg::VegState::{End, PNext};
 
 
     #[derive(Debug, Clone , PartialEq)]
@@ -313,6 +313,7 @@ pub mod vegg {
 pub mod tests {
     use crate::veg::vegg::*;
     use crate::veg::vegg::VegState::*;
+    use crate::vegg::Vegie;
 
     #[test]
     fn fetch() {

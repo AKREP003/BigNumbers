@@ -1,7 +1,8 @@
 mod dig {
     use std::cmp::Ordering::*;
     use std::ops::*;
-    use crate::veg::vegg::{Vegie, VegState};
+    use Veggies::vegg::{Vegie, VegState};
+
 
 
     #[derive(Debug, Clone)]
@@ -376,6 +377,7 @@ mod dig {
 
 #[cfg(test)]
 pub mod tests {
+    use Veggies::vegg::Vegie;
     use crate::meth_with_more_digits::dig::*;
     use crate::Vegie;
 
