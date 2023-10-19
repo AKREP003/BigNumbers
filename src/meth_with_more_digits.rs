@@ -49,7 +49,7 @@ mod dig {
 
         pub fn new(n :u64) -> Self{
 
-            return IDig::from(Vegie::new(vec![n]), 0, n >= 0)
+            return IDig::from(Vegie::new(vec![n]), 0, true)
 
         }
 
@@ -394,7 +394,20 @@ mod dig {
 
         fn div(self, rhs: Self) -> Self::Output {
 
-            let sig = self.sign;
+            if rhs == IDig::new(0){
+
+                panic!("Division by 0")
+
+            }
+
+            if self == IDig::new(0){
+
+                return self
+
+            }
+
+
+            let sig = if self.sign == rhs.sign {self.sign} else { false };
 
             let mut buf = self.clone();
 
@@ -471,13 +484,18 @@ mod dig {
 
             let mut stringfied_body = self.body.to_string();
 
-            stringfied_body.insert(self.rpoint as usize, ".".parse().unwrap());
+            if self.body.len > 0 && *self != IDig::new(0){
 
-            if self.rpoint == 0 && self.body.len > 0 {
+                stringfied_body.insert(self.rpoint as usize, ".".parse().unwrap());
 
-                stringfied_body.push( "0".parse().unwrap());
+                if self.rpoint == 0   {
 
+                    stringfied_body.push( "0".parse().unwrap());
+
+                }
             }
+
+
 
             write!(f, "{}{}", sign, stringfied_body.chars().rev().collect::<String>())
         }
