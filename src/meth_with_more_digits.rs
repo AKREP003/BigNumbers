@@ -1,9 +1,20 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
+#![allow(non_snake_case)]
+
+static LIMIT:u64 = 10;
+//9223372036854775807
+
+static MAX_NEW_DIGIT:usize = 3;
+
 mod dig {
     use std::cmp::Ordering::*;
     use std::ops::*;
+    use std::result;
     use Veggies::vegg::{Vegie, VegState};
-
-
+    use crate::LIMIT;
+    use crate::MAX_NEW_DIGIT;
 
     #[derive(Debug, Clone)]
     pub struct IDig {
@@ -31,14 +42,14 @@ mod dig {
     }
 
     pub fn d(x:f64, y:i32) -> f64 {
-        ((x / p(8.0,y.try_into().unwrap())) % 8.0).floor()
+        ((x / p(10.0,y.try_into().unwrap())) % 10.0).floor()
     }
 
     impl IDig {
 
         pub fn new(mut from:Vegie<u64>, rpoint:isize, sign: bool) -> Self{
 
-            let l:u64 = 9223372036854775807;
+            let l:u64 = LIMIT;
 
             for i in from.clone() {
 
@@ -252,7 +263,7 @@ mod dig {
 
                 if v1 < v2 {
 
-                    let k:u64 = v1 + 9223372036854775807; //shift the offset
+                    let k:u64 = v1 + LIMIT; //shift the offset
 
                     r1.update(k - v2, r1.len - i - 1);
 
@@ -335,9 +346,9 @@ mod dig {
 
                 let swh =  r1.fetch(r1.len - i - 1).value + r2.fetch(r1.len - i - 1).value;
 
-                if swh > 9223372036854775807 {
+                if swh > LIMIT {
 
-                    r1.update(swh - 9223372036854775808, r1.len - i - 1);
+                    r1.update(swh - LIMIT + 1, r1.len - i - 1);
 
                     let mut v:Vegie<u64> = Vegie::new(vec![0; (i + 1) as usize]);
 
@@ -373,12 +384,94 @@ mod dig {
     }
 
 
+    impl Div for IDig {
+        type Output = Self;
+
+        fn div(self, rhs: Self) -> Self::Output {
+
+            let sig = self.sign;
+
+            let mut buf = self.clone();
+
+            let buf_point = buf.rpoint;
+
+            let mut buf_rhs = rhs.clone();
+
+            let rhs_point = rhs.rpoint;
+
+            buf_rhs.rpoint = 0;
+
+            buf.rpoint = 0;
+            let mut result_body = IDig::new(Vegie::new(vec![]), 0, sig);
+
+            let empty =IDig::new( Vegie::new(vec![0]), 0, sig);
+
+            let mut extra_digit_added = 0;
+
+            //while buf.body != empty
+            //for _ in 0 .. 5
+
+            while buf != empty  {
+
+                if buf < buf_rhs {
+
+                    if extra_digit_added >= MAX_NEW_DIGIT {
+
+                        break
+
+                    }
+                    else {
+
+                        extra_digit_added += 1;
+
+                        buf = IDig::new(buf.body.extend(Vegie::new(vec![0])), 0, sig);
+
+                    }
+
+                }
+
+                let mut b = Vegie::new(vec![1]) ;
+
+
+                result_body = result_body + IDig::new(b.extend(Vegie::new(vec![0; extra_digit_added])), 0, sig);
+
+                b = Vegie::new(vec![0; extra_digit_added]);
+
+
+
+                dbg!(&result_body);
+                dbg!(&extra_digit_added);
+
+                buf = buf - IDig::new(b.extend(rhs.body.clone()), 0, sig);
+                dbg!(&buf);
+
+            }
+
+            let to_add = (buf_point - rhs_point) + extra_digit_added as isize;
+
+            if to_add < 0 {
+
+                panic!("increase the maximum additional digit number")
+
+            }
+
+            result_body.rpoint += to_add;
+
+            return result_body
+
+        }
+    }
+
+
 }
 
 #[cfg(test)]
 pub mod tests {
+
+    use crate::dig::*;
+
     use Veggies::vegg::Vegie;
-    use crate::meth_with_more_digits::dig::*;
+
 
 
     #[test]
@@ -418,7 +511,7 @@ pub mod tests {
         let mut v2:Vegie<u64> = Vegie::new(vec![1]);
 
 
-        let I = IDig::new(v1.clone(), 0, false);
+        let I = IDig::new(v1.clone(), 0, true);
 
 
         let D = IDig::new(v2.clone(), 0, true);
@@ -444,6 +537,24 @@ pub mod tests {
 
     }
 
+    #[test]
+    fn dividy() {
+
+        let mut v1:Vegie<u64> = Vegie::new(vec![1, 0]);
+
+        let mut v2:Vegie<u64> = Vegie::new(vec![3]);
+
+
+        let I = IDig::new(v1.clone(), 0, true);
+
+
+        let D = IDig::new(v2.clone(), 1, true);
+
+        dbg!(I / D);
+
+
+
+    }
 
 }
 

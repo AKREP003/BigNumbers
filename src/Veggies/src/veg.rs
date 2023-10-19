@@ -1,6 +1,7 @@
+#![allow(non_snake_case)]
+
 
 pub mod vegg {
-    use std::ops::Deref;
     use crate::vegg::VegState::{End, PNext};
 
 
@@ -140,6 +141,20 @@ pub mod vegg {
             b
 
 
+
+        }
+
+        pub fn extend(&self, to_extend: Vegie<T>) -> Vegie<T>{
+
+            let mut buffer = self.clone();
+
+            for i in to_extend {
+
+                buffer.push(i)
+
+            }
+
+            buffer
 
         }
 
@@ -407,13 +422,20 @@ pub mod tests {
 
         }
 
-
-
-
-
     }
 
+    #[test]
+    fn ext() {
 
+        let mut v = Vegie::new(vec![1]);
+
+        let mut v2 = Vegie::new(vec![2]);
+
+        v.extend(v2);
+
+        dbg!(v);
+
+    }
 
 }
 
