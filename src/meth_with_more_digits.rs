@@ -3,18 +3,18 @@
 #![allow(unused_mut)]
 #![allow(non_snake_case)]
 
-static LIMIT:u64 = 10;
-//9223372036854775807
 
-static MAX_NEW_DIGIT:usize = 3;
 
 mod dig {
     use std::cmp::Ordering::*;
+    use std::fmt::{Display, Formatter, Result};
     use std::ops::*;
-    use std::result;
+    use std::{result};
     use Veggies::vegg::{Vegie, VegState};
-    use crate::LIMIT;
-    use crate::MAX_NEW_DIGIT;
+    static LIMIT:u64 = 10;
+    //9223372036854775807
+
+    static MAX_NEW_DIGIT:usize = 3;
 
     #[derive(Debug, Clone)]
     pub struct IDig {
@@ -47,7 +47,13 @@ mod dig {
 
     impl IDig {
 
-        pub fn new(mut from:Vegie<u64>, rpoint:isize, sign: bool) -> Self{
+        pub fn new(n :u64) -> Self{
+
+            return IDig::from(Vegie::new(vec![n]), 0, n >= 0)
+
+        }
+
+        pub fn from(mut from:Vegie<u64>, rpoint:isize, sign: bool) -> Self{
 
             let l:u64 = LIMIT;
 
@@ -253,7 +259,7 @@ mod dig {
 
 
 
-            let mut hand = IDig::new(Vegie::new(vec![]), 0, true);
+            let mut hand = IDig::from(Vegie::new(vec![]), 0, true);
 
             for i in 0 .. r1.len {
 
@@ -272,7 +278,7 @@ mod dig {
                     v.insert(1, 0);
 
 
-                    let b = IDig::new(v, rp - 1, true);
+                    let b = IDig::from(v, rp - 1, true);
 
 
                     hand = hand + b
@@ -291,11 +297,11 @@ mod dig {
 
             if hand.body.len != 0 {
 
-                return  IDig::new(r1, rp, true) - hand
+                return  IDig::from(r1, rp, true) - hand
 
             }
 
-            return  IDig::new(r1, rp, true)
+            return  IDig::from(r1, rp, true)
 
 
         }
@@ -340,7 +346,7 @@ mod dig {
 
 
 
-            let mut hand = IDig::new(Vegie::new(vec![]), 0, sig);
+            let mut hand = IDig::from(Vegie::new(vec![]), 0, sig);
 
             for i in 0 .. r1.len {
 
@@ -354,7 +360,7 @@ mod dig {
 
                     v.insert(1, 0 );
 
-                    let b = IDig::new(v, rp, sig);
+                    let b = IDig::from(v, rp, sig);
 
                     hand = hand + b; //there is no fucking way to test it
 
@@ -371,13 +377,12 @@ mod dig {
 
             if hand.body.len != 0 {
 
-                dbg!(&hand);
 
-                return  IDig::new(r1, rp, sig) + hand
+                return  IDig::from(r1, rp, sig) + hand
 
             }
 
-            return  IDig::new(r1, rp, sig)
+            return  IDig::from(r1, rp, sig)
 
         }
 
@@ -402,9 +407,9 @@ mod dig {
             buf_rhs.rpoint = 0;
 
             buf.rpoint = 0;
-            let mut result_body = IDig::new(Vegie::new(vec![]), 0, sig);
+            let mut result_body = IDig::from(Vegie::new(vec![]), 0, sig);
 
-            let empty =IDig::new( Vegie::new(vec![0]), 0, sig);
+            let empty =IDig::from(Vegie::new(vec![0]), 0, sig);
 
             let mut extra_digit_added = 0;
 
@@ -424,7 +429,7 @@ mod dig {
 
                         extra_digit_added += 1;
 
-                        buf = IDig::new(buf.body.extend(Vegie::new(vec![0])), 0, sig);
+                        buf = IDig::from(buf.body.extend(Vegie::new(vec![0])), 0, sig);
 
                     }
 
@@ -433,17 +438,13 @@ mod dig {
                 let mut b = Vegie::new(vec![1]) ;
 
 
-                result_body = result_body + IDig::new(b.extend(Vegie::new(vec![0; extra_digit_added])), 0, sig);
+                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![0; extra_digit_added])), 0, sig);
 
                 b = Vegie::new(vec![0; extra_digit_added]);
 
 
+                buf = buf - IDig::from(b.extend(rhs.body.clone()), 0, sig);
 
-                dbg!(&result_body);
-                dbg!(&extra_digit_added);
-
-                buf = buf - IDig::new(b.extend(rhs.body.clone()), 0, sig);
-                dbg!(&buf);
 
             }
 
@@ -462,6 +463,27 @@ mod dig {
         }
     }
 
+    impl Display for IDig {
+
+        fn fmt(&self, f: &mut Formatter) -> Result {
+
+            let sign = match self.sign { true => "", false => "-"};
+
+            let mut stringfied_body = self.body.to_string();
+
+            stringfied_body.insert(self.rpoint as usize, ".".parse().unwrap());
+
+            if self.rpoint == 0 && self.body.len > 0 {
+
+                stringfied_body.push( "0".parse().unwrap());
+
+            }
+
+            write!(f, "{}{}", sign, stringfied_body.chars().rev().collect::<String>())
+        }
+
+    }
+
 
 }
 
@@ -477,9 +499,9 @@ pub mod tests {
     #[test]
     fn n() {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![9223372036854775810,0]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![9,0]);
 
-        let I = IDig::new(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
         dbg!(I);
 
@@ -493,10 +515,10 @@ pub mod tests {
         let mut v2:Vegie<u64> = Vegie::new(vec![1,0]);
 
 
-        let I = IDig::new(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
 
-        let D = IDig::new(v2.clone(), 1, true);
+        let D = IDig::from(v2.clone(), 1, true);
 
         dbg!(I + D);
 
@@ -511,10 +533,10 @@ pub mod tests {
         let mut v2:Vegie<u64> = Vegie::new(vec![1]);
 
 
-        let I = IDig::new(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
 
-        let D = IDig::new(v2.clone(), 0, true);
+        let D = IDig::from(v2.clone(), 0, true);
 
         dbg!(I - D);
 
@@ -528,10 +550,10 @@ pub mod tests {
         let mut v2:Vegie<u64> = Vegie::new(vec![1]);
 
 
-        let I = IDig::new(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
 
-        let D = IDig::new(v2.clone(), 0, true);
+        let D = IDig::from(v2.clone(), 0, true);
 
         dbg!(I == D);
 
@@ -540,22 +562,20 @@ pub mod tests {
     #[test]
     fn dividy() {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![1, 0]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![1]);
 
         let mut v2:Vegie<u64> = Vegie::new(vec![3]);
 
 
-        let I = IDig::new(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
 
-        let D = IDig::new(v2.clone(), 1, true);
+        let D = IDig::from(v2.clone(), 0, true);
 
-        dbg!(I / D);
+        println!("{}", I / D);
 
 
 
     }
 
 }
-
-fn main() {}

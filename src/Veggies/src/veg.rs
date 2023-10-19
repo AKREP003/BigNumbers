@@ -2,6 +2,7 @@
 
 
 pub mod vegg {
+    use std::fmt::{Display, Formatter, Result};
     use crate::vegg::VegState::{End, PNext};
 
 
@@ -321,7 +322,25 @@ pub mod vegg {
 
     }
 
-}
+    }
+
+    impl<T:Display + Copy + PartialEq + std::fmt::Debug> Display for Vegie<T> {
+
+        fn fmt(&self, f: &mut Formatter) -> Result {
+
+            let mut r = String::new();
+
+            for i in self.clone() {
+
+                r.push(i.to_string().parse().unwrap());
+
+            }
+
+            write!(f, "{}", r)
+        }
+
+    }
+
 }
 
 #[cfg(test)]
@@ -434,6 +453,15 @@ pub mod tests {
         v.extend(v2);
 
         dbg!(v);
+
+    }
+
+    #[test]
+    fn dis() {
+
+        let mut v = Vegie::new(vec![1]);
+
+        println!("{}",v);
 
     }
 
