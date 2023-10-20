@@ -332,7 +332,7 @@ pub mod vegg {
 
             for i in self.clone() {
 
-                r.push(i.to_string().parse().unwrap());
+                r = r + &format!("{}",i).to_string();
 
             }
 

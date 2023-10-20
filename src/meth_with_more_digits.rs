@@ -4,14 +4,13 @@
 #![allow(non_snake_case)]
 
 
-
 mod dig {
     use std::cmp::Ordering::*;
     use std::fmt::{Display, Formatter, Result};
     use std::ops::*;
     use std::{result};
     use Veggies::vegg::{Vegie, VegState};
-    static LIMIT:u64 = 10;
+    static LIMIT:u64 = 100;
     //9223372036854775807
 
     static MAX_NEW_DIGIT:usize = 3;
@@ -47,9 +46,9 @@ mod dig {
 
     impl IDig {
 
-        pub fn new(n :u64) -> Self{
+        pub fn new(n :i64) -> Self{
 
-            return IDig::from(Vegie::new(vec![n]), 0, true)
+            return IDig::from(Vegie::new(vec![n.abs().try_into().unwrap()]), 0, n >= 0)
 
         }
 
@@ -417,12 +416,16 @@ mod dig {
 
             let rhs_point = rhs.rpoint;
 
+            buf_rhs.sign = true;
+
+            buf.sign = true;
+
             buf_rhs.rpoint = 0;
 
             buf.rpoint = 0;
-            let mut result_body = IDig::from(Vegie::new(vec![]), 0, sig);
+            let mut result_body = IDig::from(Vegie::new(vec![]), 0, true);
 
-            let empty =IDig::from(Vegie::new(vec![0]), 0, sig);
+            let empty =IDig::from(Vegie::new(vec![0]), 0, true);
 
             let mut extra_digit_added = 0;
 
@@ -442,7 +445,7 @@ mod dig {
 
                         extra_digit_added += 1;
 
-                        buf = IDig::from(buf.body.extend(Vegie::new(vec![0])), 0, sig);
+                        buf = IDig::from(buf.body.extend(Vegie::new(vec![0])), 0, true);
 
                     }
 
@@ -451,12 +454,12 @@ mod dig {
                 let mut b = Vegie::new(vec![1]) ;
 
 
-                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![0; extra_digit_added])), 0, sig);
+                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![0; extra_digit_added])), 0, true);
 
                 b = Vegie::new(vec![0; extra_digit_added]);
 
 
-                buf = buf - IDig::from(b.extend(rhs.body.clone()), 0, sig);
+                buf = buf - IDig::from(b.extend(rhs.body.clone()), 0, true);
 
 
             }
@@ -471,6 +474,8 @@ mod dig {
 
             result_body.rpoint += to_add;
 
+            result_body.sign = sig;
+
             return result_body
 
         }
@@ -484,18 +489,22 @@ mod dig {
 
             let mut stringfied_body = self.body.to_string();
 
-            if self.body.len > 0 && *self != IDig::new(0){
 
+            if self.rpoint != 0 {
                 stringfied_body.insert(self.rpoint as usize, ".".parse().unwrap());
+            };
 
-                if self.rpoint == 0   {
+            while stringfied_body.len() != 0 && stringfied_body.chars().nth(stringfied_body.len() - 1 as usize).unwrap() == '0'{
 
-                    stringfied_body.push( "0".parse().unwrap());
+                stringfied_body.pop();
 
-                }
             }
 
+            if self < &IDig::new(1) && self > &IDig::new(-1){
 
+                stringfied_body.push('0');
+
+            };
 
             write!(f, "{}{}", sign, stringfied_body.chars().rev().collect::<String>())
         }
@@ -585,10 +594,10 @@ pub mod tests {
         let mut v2:Vegie<u64> = Vegie::new(vec![3]);
 
 
-        let I = IDig::from(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 3, true);
 
 
-        let D = IDig::from(v2.clone(), 0, true);
+        let D = IDig::from(v2.clone(), 0, false);
 
         println!("{}", I / D);
 
