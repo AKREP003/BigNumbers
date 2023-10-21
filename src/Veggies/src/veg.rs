@@ -24,7 +24,7 @@ pub mod vegg {
 
         pub head:VegState<T>,
 
-        curry: isize
+        pub curry: isize
     }
 
     #[derive(Debug, Clone, PartialEq)]

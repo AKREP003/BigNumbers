@@ -1,19 +1,19 @@
 #![allow(dead_code)]
-#![allow(unused_imports)]
 #![allow(unused_mut)]
 #![allow(non_snake_case)]
 
 
 mod dig {
+    use std::cmp::{max};
     use std::cmp::Ordering::*;
     use std::fmt::{Display, Formatter, Result};
     use std::ops::*;
-    use std::{result};
-    use Veggies::vegg::{Vegie, VegState};
-    static LIMIT:u64 = 100;
+    use Veggies::vegg::{Vegie};
+    static BASE:u64 = 10;
     //9223372036854775807
 
-    static MAX_NEW_DIGIT:usize = 3;
+    static MAX_NEW_DIGIT:usize = 5;
+
 
     #[derive(Debug, Clone)]
     pub struct IDig {
@@ -54,11 +54,10 @@ mod dig {
 
         pub fn from(mut from:Vegie<u64>, rpoint:isize, sign: bool) -> Self{
 
-            let l:u64 = LIMIT;
-
             for i in from.clone() {
 
-                if i > l {
+                if i >= BASE {
+                    dbg!(i);
                     panic!("E")
                 }
 
@@ -89,7 +88,7 @@ mod dig {
 
             for _ in 0 .. (r1.len - n1.rpoint) - (r2.len - n2.rpoint) {
 
-                r2.insert(0, 0);
+                r2.push( 0);
 
             }
 
@@ -97,7 +96,7 @@ mod dig {
 
             for _ in 0 .. (r2.len - n2.rpoint) - (r1.len - n1.rpoint){
 
-                r1.insert(0, 0);
+                r1.push( 0);
 
             }
 
@@ -109,7 +108,7 @@ mod dig {
 
             for _ in 0 .. (n1.rpoint) - (n2.rpoint) {
 
-                r2.push(0);
+                r2.insert(0,0 );
 
             }
 
@@ -119,7 +118,7 @@ mod dig {
 
             for _ in 0 .. (n2.rpoint) - (n1.rpoint){
 
-                r1.push( 0);
+                r1.insert( 0, 0);
 
             }
 
@@ -133,7 +132,24 @@ mod dig {
     impl PartialEq<Self> for IDig {
         fn eq(&self, other: &Self) -> bool {
 
-            return !{self < other} && !{other < self}
+            if !(self.sign == other.sign) {
+
+                let (mut n1, mut n2, _) = resize(&self, &IDig::new(0));
+
+                if n1 == n2 {
+
+                    let (n3, n4, _) = resize(&self, &IDig::new(0));
+
+                    return n3 == n4;
+                }
+
+                return false
+
+            } else {
+                let (n1, n2, _) = resize(&self, other);
+
+                return n2 == n1
+            }
 
         }
     }
@@ -163,7 +179,7 @@ mod dig {
                     b1.sign = true;
                     b2.sign = true;
 
-                    return match {b1 < b2} {
+                    return match {b1 > b2} {
                         true => {Some(Greater)}
                         false => {Some(Less)}
                     }
@@ -172,39 +188,17 @@ mod dig {
 
                 let siz = resize(&self, &other);
 
-                let mut e1 = match siz.0.head {
-                    VegState::End => {return Some(Equal)}
-                    VegState::PNext(t) => {t}
-                };
+                for i in 0 .. siz.1.len {
 
-                let mut e2 = match siz.1.head {
-                    VegState::End => {return Some(Equal)}
-                    VegState::PNext(t) => {t}
-                };
+                    let v1 = siz.0.fetch(siz.0.len - i - 1).value;
+                    let v2 = siz.1.fetch(siz.0.len - i - 1).value;
 
-                for _ in 0 .. siz.0.len {
-
-                    if e1.value != e2.value {
-                        return if e1.value < e2.value {
-                            Some(Less)
-                        } else { Some(Greater) }
-
-                    } else {
-
-                        e1 = match e1.next {
-                            VegState::End => {break}
-                            VegState::PNext(t) => {t}
-                        };
-
-                        e2 = match e2.next {
-                            VegState::End => {break}
-                            VegState::PNext(t) => {t}
-                        };
-
-
+                    if v1 > v2 {
+                        return Some(Greater)
                     }
-
-
+                    if v1 < v2 {
+                        return Some(Less)
+                    }
 
                 }
 
@@ -268,7 +262,7 @@ mod dig {
 
                 if v1 < v2 {
 
-                    let k:u64 = v1 + LIMIT; //shift the offset
+                    let k:u64 = v1 + BASE; //shift the offset
 
                     r1.update(k - v2, r1.len - i - 1);
 
@@ -351,9 +345,9 @@ mod dig {
 
                 let swh =  r1.fetch(r1.len - i - 1).value + r2.fetch(r1.len - i - 1).value;
 
-                if swh > LIMIT {
+                if swh >= BASE {
 
-                    r1.update(swh - LIMIT + 1, r1.len - i - 1);
+                    r1.update(swh - BASE, r1.len - i - 1);
 
                     let mut v:Vegie<u64> = Vegie::new(vec![0; (i + 1) as usize]);
 
@@ -445,26 +439,22 @@ mod dig {
 
                         extra_digit_added += 1;
 
-                        buf = IDig::from(buf.body.extend(Vegie::new(vec![0])), 0, true);
+                        buf.body.insert(0, 0);
 
                     }
 
                 }
 
-                let mut b = Vegie::new(vec![1]) ;
+                let mut b =  Vegie::new(vec![]);
 
+                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![1])), extra_digit_added as isize, true);
 
-                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![0; extra_digit_added])), 0, true);
-
-                b = Vegie::new(vec![0; extra_digit_added]);
-
-
-                buf = buf - IDig::from(b.extend(rhs.body.clone()), 0, true);
+                buf = buf - IDig::from(rhs.body.clone(), 0, true);
 
 
             }
 
-            let to_add = (buf_point - rhs_point) + extra_digit_added as isize;
+            let to_add = buf_point - rhs_point;
 
             if to_add < 0 {
 
@@ -481,6 +471,30 @@ mod dig {
         }
     }
 
+    impl Mul for IDig {
+        type Output = Self;
+
+        fn mul(self, rhs: Self) -> Self::Output { //Glory To Anatoly Karatsuba
+
+            let zero = IDig::new(0);
+
+            if rhs == zero || self == zero{ // I am something of an optimizer myself
+
+                return zero
+
+            };
+
+            let sig = if self.sign == rhs.sign {self.sign} else { false };
+
+            let mut buf = self.clone();
+
+
+
+            return buf
+
+        }
+    }
+
     impl Display for IDig {
 
         fn fmt(&self, f: &mut Formatter) -> Result {
@@ -489,19 +503,30 @@ mod dig {
 
             let mut stringfied_body = self.body.to_string();
 
-
-            if self.rpoint != 0 {
-                stringfied_body.insert(self.rpoint as usize, ".".parse().unwrap());
-            };
-
             while stringfied_body.len() != 0 && stringfied_body.chars().nth(stringfied_body.len() - 1 as usize).unwrap() == '0'{
 
                 stringfied_body.pop();
 
             }
 
-            if self < &IDig::new(1) && self > &IDig::new(-1){
+            let safe_rpoint = max(0, self.rpoint);
 
+
+
+            for _ in 0 .. max(0, safe_rpoint - self.body.len){
+
+                stringfied_body.push('0')
+
+            }
+
+
+            if safe_rpoint != 0 {
+
+                stringfied_body.insert(safe_rpoint as usize, ".".parse().unwrap());
+            };
+
+
+            if self < &IDig::new(1) && self > &IDig::new(-1){
                 stringfied_body.push('0');
 
             };
@@ -516,7 +541,6 @@ mod dig {
 
 #[cfg(test)]
 pub mod tests {
-
     use crate::dig::*;
 
     use Veggies::vegg::Vegie;
@@ -528,26 +552,28 @@ pub mod tests {
 
         let mut v1:Vegie<u64> = Vegie::new(vec![9,0]);
 
-        let I = IDig::from(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), -1, true);
 
-        dbg!(I);
+        println!("{}",I);
 
     }
 
     #[test]
     fn s()  {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![3,0]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![3]);
 
-        let mut v2:Vegie<u64> = Vegie::new(vec![1,0]);
-
-
-        let I = IDig::from(v1.clone(), 0, true);
+        let mut v2:Vegie<u64> = Vegie::new(vec![2, 1, 1]);
 
 
-        let D = IDig::from(v2.clone(), 1, true);
+        let I = IDig::from(v1.clone(), 1, true);
 
-        dbg!(I + D);
+
+        let D = IDig::from(v2.clone(), 0, true);
+
+
+
+        println!("{} + {} = {}",I.clone(), D.clone(), I + D);
 
     }
 
@@ -555,9 +581,9 @@ pub mod tests {
     #[test]
     fn a() {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![1,0]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![6]);
 
-        let mut v2:Vegie<u64> = Vegie::new(vec![1]);
+        let mut v2:Vegie<u64> = Vegie::new(vec![0, 1]);
 
 
         let I = IDig::from(v1.clone(), 0, true);
@@ -565,16 +591,16 @@ pub mod tests {
 
         let D = IDig::from(v2.clone(), 0, true);
 
-        dbg!(I - D);
+        println!("{} - {} = {}",I.clone(), D.clone(), I - D);
 
     }
 
     #[test]
     fn cm() {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![1]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![2]);
 
-        let mut v2:Vegie<u64> = Vegie::new(vec![1]);
+        let mut v2:Vegie<u64> = Vegie::new(vec![0, 1]);
 
 
         let I = IDig::from(v1.clone(), 0, true);
@@ -582,7 +608,7 @@ pub mod tests {
 
         let D = IDig::from(v2.clone(), 0, true);
 
-        dbg!(I == D);
+        dbg!(I < D);
 
     }
 
@@ -594,12 +620,31 @@ pub mod tests {
         let mut v2:Vegie<u64> = Vegie::new(vec![3]);
 
 
-        let I = IDig::from(v1.clone(), 3, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
 
-        let D = IDig::from(v2.clone(), 0, false);
+        let D = IDig::from(v2.clone(), 0, true);
 
         println!("{}", I / D);
+
+
+
+    }
+
+    #[test]
+    fn multip() {
+
+        let mut v1:Vegie<u64> = Vegie::new(vec![0, 2,0]);
+
+        let mut v2:Vegie<u64> = Vegie::new(vec![3]);
+
+
+        let I = IDig::from(v1, 0, true);
+
+
+        let D = IDig::from(v2, 0, true);
+
+        println!("{}", I + D);
 
 
 
