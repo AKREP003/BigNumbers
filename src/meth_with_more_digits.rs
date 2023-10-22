@@ -57,7 +57,7 @@ mod dig {
             for i in from.clone() {
 
                 if i >= BASE {
-                    dbg!(i);
+
                     panic!("E")
                 }
 
@@ -74,7 +74,17 @@ mod dig {
 
         }
 
+        pub fn strip(&mut self) {
+
+            while (self.body.fetch(self.body.len - 1).value == 0) && (self.body.len > 0){
+
+                self.body.pop();
+
+            };
+
+        }
     }
+
 
     fn resize(n1: &IDig, n2:&IDig) -> (Vegie<u64>, Vegie<u64>, isize) {
 
@@ -131,24 +141,20 @@ mod dig {
 
     impl PartialEq<Self> for IDig {
         fn eq(&self, other: &Self) -> bool {
-
-            if !(self.sign == other.sign) {
-
+            return if !(self.sign == other.sign) {
                 let (mut n1, mut n2, _) = resize(&self, &IDig::new(0));
 
                 if n1 == n2 {
-
                     let (n3, n4, _) = resize(&self, &IDig::new(0));
 
                     return n3 == n4;
                 }
 
-                return false
-
+                false
             } else {
                 let (n1, n2, _) = resize(&self, other);
 
-                return n2 == n1
+                n2 == n1
             }
 
         }
@@ -347,11 +353,12 @@ mod dig {
 
                 if swh >= BASE {
 
+
                     r1.update(swh - BASE, r1.len - i - 1);
 
                     let mut v:Vegie<u64> = Vegie::new(vec![0; (i + 1) as usize]);
 
-                    v.insert(1, 0 );
+                    v.push(1);
 
                     let b = IDig::from(v, rp, sig);
 
@@ -486,11 +493,64 @@ mod dig {
 
             let sig = if self.sign == rhs.sign {self.sign} else { false };
 
-            let mut buf = self.clone();
 
 
+            if self.body.len == 1 || rhs.body.len == 1{
 
-            return buf
+                let mut r:isize = 0;
+
+                let mut dig_result = zero.clone();
+
+                for i in self.body {
+
+                    for j in rhs.body.clone() {
+
+                        let res = i * j;
+                        let current = res % BASE;
+                        let hand = (res - current) / BASE;
+
+                        dig_result = dig_result + IDig::from(Vegie::new(vec![current, hand]), 0 - r, sig);
+
+                        r += 1;
+
+                    }
+
+                }
+
+                return dig_result
+
+            };
+
+            let (mut v1, mut v2, rp) = resize(&self, &rhs);
+
+            //for _ in 0 .. (v1.len % 2) { v1.push(0);v2.push(0); };
+
+            let middle = v1.len / 2;
+
+            let (x0, x1) = (IDig::from(v1.slice(0, middle-1), 0, true), IDig::from(v1.slice(middle , v1.len - 1), 0, true));
+            let (y0, y1) = (IDig::from(v2.slice(0, middle-1), 0, true), IDig::from(v2.slice(middle, v1.len - 1), 0, true));
+
+            let mut z2 = x1.clone() * y1.clone();
+
+            let mut z0 = x0.clone() * y0.clone();
+
+            let mut z1 = ((x1.clone() + x0.clone())*(y1.clone() + y0.clone())) - (z2.clone() + z0.clone());
+
+            for _ in 0 .. middle {
+                z1.body.insert(0,0);
+            }
+
+            for _ in 0 .. middle * 2 {
+                z2.body.insert(0,0);
+            }
+
+            let mut added = z2 + z1 + z0;
+
+            added.sign = sig;
+
+            //added.rpoint =rp; todo: deal with it later
+
+            return added
 
         }
     }
@@ -561,12 +621,12 @@ pub mod tests {
     #[test]
     fn s()  {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![3]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![6]);
 
-        let mut v2:Vegie<u64> = Vegie::new(vec![2, 1, 1]);
+        let mut v2:Vegie<u64> = Vegie::new(vec![5]);
 
 
-        let I = IDig::from(v1.clone(), 1, true);
+        let I = IDig::from(v1.clone(), 0, true);
 
 
         let D = IDig::from(v2.clone(), 0, true);
@@ -634,17 +694,18 @@ pub mod tests {
     #[test]
     fn multip() {
 
-        let mut v1:Vegie<u64> = Vegie::new(vec![0, 2,0]);
+        let mut v1:Vegie<u64> = Vegie::new(vec![0,0,5]);
 
-        let mut v2:Vegie<u64> = Vegie::new(vec![3]);
-
-
-        let I = IDig::from(v1, 0, true);
+        let mut v2:Vegie<u64> = Vegie::new(vec![0,0,5]);
 
 
-        let D = IDig::from(v2, 0, true);
+        let mut I = IDig::from(v1.clone(), 0, true);
 
-        println!("{}", I + D);
+
+        let D = IDig::from(v2.clone(), 0, true);
+
+
+        println!("{}", I * D);
 
 
 

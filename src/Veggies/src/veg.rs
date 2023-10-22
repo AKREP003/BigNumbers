@@ -161,8 +161,7 @@ pub mod vegg {
 
         pub fn fetch(&self, index: isize) -> Node<T> {
 
-            if index > self.len {
-
+            if index > self.len || index < 0{
                 panic!("index out of bounds")
 
             }
@@ -188,6 +187,51 @@ pub mod vegg {
 
 
         }
+        
+        pub fn slice(&self, from:isize, to:isize ) -> Vegie<T>{
+
+            let mut new_slice = Vegie::new(vec![]);
+
+            if from > self.len.try_into().unwrap() || from < 0 || to > self.len.try_into().unwrap() || to < 0 || from > to{
+
+                panic!("index out of bounds")
+
+            }
+
+            let mut buffer = match &self.head {
+                End => {panic!("index out of bounds")}
+                PNext(t) => {*t.clone()}
+            };
+
+
+
+            for _ in 0 .. from {
+
+                buffer = match buffer.next {
+                    End => {panic!("index out of bounds")}
+                    PNext(t) => {*t}
+                }
+
+            };
+
+            new_slice.push(buffer.value);
+
+            for _ in 0 .. (to - from){
+
+
+                buffer = match buffer.next {
+                    End => {panic!("index out of bounds")}
+                    PNext(t) => {*t}
+                };
+
+                new_slice.push(buffer.value);
+            };
+
+            return new_slice;
+
+
+        }
+        
 
         pub fn push(&mut self, value: T) {
 
@@ -199,7 +243,7 @@ pub mod vegg {
 
             let buf = self.fetch(self.len - 1).value;
 
-            self.delete(self.len);
+            self.delete(self.len - 1);
 
             return buf
 
@@ -364,8 +408,6 @@ pub mod tests {
         let mut v = Vegie::new(vec![]);
         
         v.push(5);
-        
-
 
         let r = v.pop();
 
