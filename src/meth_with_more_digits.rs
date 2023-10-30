@@ -3,7 +3,7 @@
 #![allow(non_snake_case)]
 
 
-mod dig {
+pub mod dig {
     use std::cmp::{max};
     use std::cmp::Ordering::*;
     use std::fmt::{Display, Formatter, Result};
@@ -20,6 +20,12 @@ mod dig {
         rpoint: isize,
         sign:bool,
         body: Vegie<u64>
+    }
+
+    pub struct IDigIter {
+
+
+
     }
 
     pub fn p(n1: f64, n2: isize) -> f64 {
@@ -54,7 +60,7 @@ mod dig {
 
         pub fn from(mut from:Vegie<u64>, rpoint:isize, sign: bool) -> Self{
 
-            for i in from.clone() {
+            for i in from.initiate_iter() {
 
                 if i >= BASE {
 
@@ -501,9 +507,9 @@ mod dig {
 
                 let mut dig_result = zero.clone();
 
-                for i in self.body {
+                for i in self.body.initiate_iter() {
 
-                    for j in rhs.body.clone() {
+                    for j in rhs.body.initiate_iter() {
 
                         let res = i * j;
                         let current = res % BASE;
@@ -521,7 +527,7 @@ mod dig {
 
             };
 
-            let (mut v1, mut v2, rp) = resize(&self, &rhs);
+            let (mut v1, mut v2, _rp) = resize(&self, &rhs); //problem for the future
 
             //for _ in 0 .. (v1.len % 2) { v1.push(0);v2.push(0); };
 
@@ -595,6 +601,7 @@ mod dig {
         }
 
     }
+
 
 
 }
