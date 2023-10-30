@@ -22,11 +22,34 @@ pub mod dig {
         body: Vegie<u64>
     }
 
-    pub struct IDigIter {
+    #[derive(Debug)]
+    pub struct IDigIter { //it is not advised for the user to construct this structure themselves
 
-
+        pub remaining: IDig,
+        pub index:IDig
 
     }
+
+    impl Iterator for IDigIter {
+        type Item = IDig;
+
+        fn next(&mut self) -> Option<Self::Item> {
+
+            let mut step = IDig::new(1);
+
+            step.rpoint = self.remaining.rpoint.clone();
+
+            if self.remaining == IDig::new(0) {
+                return None
+            };
+
+            self.remaining = self.remaining.clone() - step.clone();
+
+            Some(self.remaining.clone())
+
+        }
+    }
+
 
     pub fn p(n1: f64, n2: isize) -> f64 {
         if n1 == 0.0 { return 1.0; } //lim
@@ -87,6 +110,23 @@ pub mod dig {
                 self.body.pop();
 
             };
+
+        }
+
+        pub fn init_iter(&self)->IDigIter {
+
+            IDigIter {remaining: self.clone().abs(), index: IDig::new(0)}
+
+        }
+
+        pub fn abs(&self) -> IDig{
+
+            let mut b = self.clone();
+
+            b.sign = true;
+
+            return b;
+
 
         }
     }
@@ -715,6 +755,17 @@ pub mod tests {
         println!("{}", I * D);
 
 
+
+    }
+
+    #[test]
+    fn itr() {
+
+        let  v = IDig::new(-5).init_iter();
+
+        for i in v {
+            println!("{}", i)
+        }
 
     }
 
