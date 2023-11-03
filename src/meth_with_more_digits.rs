@@ -6,10 +6,10 @@
 pub mod dig {
     use std::cmp::max;
     use std::cmp::Ordering::*;
-    use std::fmt::{Display, Formatter, Result};
+    use std::fmt::{Debug, Display, Formatter, Result};
     use std::ops::*;
 
-    use Veggies::vegg::Vegie;
+    use Veggies::vegg::{Vegie, VegieIter};
 
     static BASE: u64 = 10;
     //9223372036854775807
@@ -108,6 +108,93 @@ pub mod dig {
 
             return b;
         }
+
+        pub fn fetchFrom<T: Copy + PartialEq + Debug>(&self, veg: VegieIter<T>) -> T{
+
+            let mut i = self.init_iter();
+
+            for item in veg {
+
+                if i.next() == None {
+                    return item
+                }
+
+            }
+
+            panic!("smthng went wrong")
+
+        }
+
+        pub fn slowDivision(&self, rhs: &Self) -> Self {
+
+            if *rhs == IDig::new(0) {
+                panic!("Division by 0")
+            }
+
+            if *self == IDig::new(0) {
+                return self.clone();
+            }
+
+
+            let sig = if self.sign == rhs.sign { self.sign } else { false };
+
+            let mut buf = self.clone();
+
+            let buf_point = buf.rpoint;
+
+            let mut buf_rhs = rhs.clone();
+
+            let rhs_point = rhs.rpoint;
+
+            buf_rhs.sign = true;
+
+            buf.sign = true;
+
+            buf_rhs.rpoint = 0;
+
+            buf.rpoint = 0;
+            let mut result_body = IDig::from(Vegie::new(vec![]), 0, true);
+
+            let empty = IDig::from(Vegie::new(vec![0]), 0, true);
+
+            let mut extra_digit_added = 0;
+
+            //while buf.body != empty
+            //for _ in 0 .. 5
+
+            while buf != empty {
+                if buf < buf_rhs {
+                    if extra_digit_added >= MAX_NEW_DIGIT {
+                        break;
+                    } else {
+                        extra_digit_added += 1;
+
+                        buf.body.insert(0, 0);
+                    }
+                }
+
+                let mut b = Vegie::new(vec![]);
+
+                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![1])), extra_digit_added as isize, true);
+
+                buf = buf - IDig::from(rhs.body.clone(), 0, true);
+            }
+
+            let to_add = buf_point - rhs_point;
+
+            if to_add < 0 {
+                panic!("increase the maximum additional digit number")
+            }
+
+            result_body.rpoint += to_add;
+
+            result_body.sign = sig;
+
+            return result_body;
+
+
+        }
+
     }
 
     fn resize(n1: &IDig, n2: &IDig) -> (Vegie<u64>, Vegie<u64>, isize) {
@@ -340,70 +427,13 @@ pub mod dig {
         type Output = Self;
 
         fn div(self, rhs: Self) -> Self::Output {
-            if rhs == IDig::new(0) {
-                panic!("Division by 0")
-            }
 
-            if self == IDig::new(0) {
-                return self;
-            }
+            let one = IDig::new(1);
 
+            let divided = one.slowDivision(&rhs);
 
-            let sig = if self.sign == rhs.sign { self.sign } else { false };
+            return self * divided
 
-            let mut buf = self.clone();
-
-            let buf_point = buf.rpoint;
-
-            let mut buf_rhs = rhs.clone();
-
-            let rhs_point = rhs.rpoint;
-
-            buf_rhs.sign = true;
-
-            buf.sign = true;
-
-            buf_rhs.rpoint = 0;
-
-            buf.rpoint = 0;
-            let mut result_body = IDig::from(Vegie::new(vec![]), 0, true);
-
-            let empty = IDig::from(Vegie::new(vec![0]), 0, true);
-
-            let mut extra_digit_added = 0;
-
-            //while buf.body != empty
-            //for _ in 0 .. 5
-
-            while buf != empty {
-                if buf < buf_rhs {
-                    if extra_digit_added >= MAX_NEW_DIGIT {
-                        break;
-                    } else {
-                        extra_digit_added += 1;
-
-                        buf.body.insert(0, 0);
-                    }
-                }
-
-                let mut b = Vegie::new(vec![]);
-
-                result_body = result_body + IDig::from(b.extend(Vegie::new(vec![1])), extra_digit_added as isize, true);
-
-                buf = buf - IDig::from(rhs.body.clone(), 0, true);
-            }
-
-            let to_add = buf_point - rhs_point;
-
-            if to_add < 0 {
-                panic!("increase the maximum additional digit number")
-            }
-
-            result_body.rpoint += to_add;
-
-            result_body.sign = sig;
-
-            return result_body;
         }
     }
 
@@ -576,7 +606,7 @@ pub mod tests {
     fn dividy() {
         let mut v1: Vegie<u64> = Vegie::new(vec![1]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![3]);
+        let mut v2: Vegie<u64> = Vegie::new(vec![5]);
 
 
         let I = IDig::from(v1.clone(), 0, true);
@@ -610,5 +640,18 @@ pub mod tests {
         for i in v {
             println!("{}", i)
         }
+    }
+
+    #[test]
+    fn fet() {
+
+        let lis = Vegie::new(vec![2, 5]);
+
+        let v = IDig::new(0);
+
+        let r = v.fetchFrom(lis.initiate_iter());
+
+        dbg!(r);
+
     }
 }

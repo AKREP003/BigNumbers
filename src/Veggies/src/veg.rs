@@ -21,10 +21,9 @@ pub mod vegg {
 
         pub head: VegState<T>,
 
-        pub curry: isize,
     }
 
-    pub struct Iter<T: Copy + PartialEq> {
+    pub struct VegieIter<T: Copy + PartialEq> {
         pub current: VegState<T>,
         pub prevous: VegState<T>,
         pub len: isize,
@@ -32,7 +31,7 @@ pub mod vegg {
 
     }
 
-    impl<T: Copy + PartialEq + std::fmt::Debug> Iterator for Iter<T> {
+    impl<T: Copy + PartialEq + std::fmt::Debug> Iterator for VegieIter<T> {
         type Item = T;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -60,7 +59,7 @@ pub mod vegg {
         }
     }
 
-    impl<T: Copy + PartialEq + std::fmt::Debug> Iter<T> {
+    impl<T: Copy + PartialEq + std::fmt::Debug> VegieIter<T> {
 
         pub fn go_back(&mut self) {
             self.current =  self.prevous.clone();
@@ -72,6 +71,13 @@ pub mod vegg {
         End,
 
         PNext(Box<Node<T>>),
+    }
+
+    #[derive(Debug, Clone, PartialEq)]
+    pub enum UnsafeVegState<T: Copy + PartialEq> {
+        End,
+
+        PNext(*mut Node<T>),
     }
 
     fn index_change<T: Copy + PartialEq + std::fmt::Debug>(by: isize, mut buffer: &mut Box<Node<T>>) {
@@ -141,9 +147,10 @@ pub mod vegg {
     }
 
 
+
     impl<T: Copy + std::fmt::Debug + PartialEq> Vegie<T> {
         pub fn new(from: Vec<T>) -> Vegie<T> {
-            let mut b = Vegie { len: 0, head: End, curry: 0 };
+            let mut b = Vegie { len: 0, head: End };
 
             for i in from {
                 b.push(i)
@@ -230,8 +237,8 @@ pub mod vegg {
             return buf;
         }
 
-        pub fn initiate_iter(&self) -> Iter<T> {
-            Iter {
+        pub fn initiate_iter(&self) -> VegieIter<T> {
+            VegieIter {
                 current: self.head.clone(),
                 prevous: End,
                 len: self.len,
