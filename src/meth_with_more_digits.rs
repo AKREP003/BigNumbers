@@ -182,9 +182,6 @@ pub mod dig {
 
             let to_add = buf_point - rhs_point;
 
-            if to_add < 0 {
-                panic!("increase the maximum additional digit number")
-            }
 
             result_body.rpoint += to_add;
 
@@ -468,7 +465,7 @@ pub mod dig {
                         r += 1;
                     }
                 }
-
+                dig_result.rpoint = self.rpoint + rhs.rpoint ;
                 return dig_result;
             };
 
@@ -499,7 +496,7 @@ pub mod dig {
 
             added.sign = sig;
 
-            //added.rpoint =rp; todo: deal with it later
+            added.rpoint =self.rpoint + rhs.rpoint ;
 
             return added;
         }
@@ -606,13 +603,13 @@ pub mod tests {
     fn dividy() {
         let mut v1: Vegie<u64> = Vegie::new(vec![1]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![5]);
+        let mut v2: Vegie<u64> = Vegie::new(vec![3]);
 
 
-        let I = IDig::from(v1.clone(), 0, true);
+        let I = IDig::from(v1.clone(), 1, true);
 
 
-        let D = IDig::from(v2.clone(), 0, true);
+        let D = IDig::from(v2.clone(), 2, true);
 
         println!("{}", I / D);
     }
