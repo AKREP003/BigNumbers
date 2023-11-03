@@ -7,6 +7,7 @@ pub mod dig {
     use std::cmp::max;
     use std::cmp::Ordering::*;
     use std::fmt::{Debug, Display, Formatter, Result};
+
     use std::ops::*;
 
     use Veggies::vegg::{Vegie, VegieIter};
@@ -400,11 +401,13 @@ pub mod dig {
                 if swh >= BASE {
                     r1.update(swh - BASE, r1.len - i - 1);
 
-                    let mut v: Vegie<u64> = Vegie::new(vec![0; (i + 1) as usize]);
+                    let mut v: Vegie<u64> = Vegie::new(vec![0; (r1.len - i) as usize]);
 
                     v.push(1);
 
                     let b = IDig::from(v, rp, sig);
+
+
 
                     hand = hand + b; //there is no fucking way to test it
                 } else {
@@ -465,7 +468,7 @@ pub mod dig {
                         r += 1;
                     }
                 }
-                dig_result.rpoint = self.rpoint + rhs.rpoint ;
+                //dig_result.rpoint = self.rpoint + rhs.rpoint ;
                 return dig_result;
             };
 
@@ -554,9 +557,9 @@ pub mod tests {
 
     #[test]
     fn s() {
-        let mut v1: Vegie<u64> = Vegie::new(vec![6]);
+        let mut v1: Vegie<u64> = Vegie::new(vec![6,1]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![5]);
+        let mut v2: Vegie<u64> = Vegie::new(vec![5,4,9,5]);
 
 
         let I = IDig::from(v1.clone(), 0, true);
@@ -616,9 +619,9 @@ pub mod tests {
 
     #[test]
     fn multip() {
-        let mut v1: Vegie<u64> = Vegie::new(vec![0, 0, 5]);
+        let mut v1: Vegie<u64> = Vegie::new(vec![8,2]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![0, 0, 5]);
+        let mut v2: Vegie<u64> = Vegie::new(vec![7, 2]);
 
 
         let mut I = IDig::from(v1.clone(), 0, true);
