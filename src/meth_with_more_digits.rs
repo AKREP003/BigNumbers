@@ -546,7 +546,7 @@ pub mod dig {
                         let current = res % BASE;
                         let hand = (res - current) / BASE;
 
-                        added = added + IDig::from(Vegie::new(vec![current, hand]), 1 - r, sig);
+                        added = added + IDig::from(Vegie::new(vec![current, hand]), 0 - r, sig);
 
                         r += 1;
                     }
