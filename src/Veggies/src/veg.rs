@@ -212,13 +212,19 @@ pub mod vegg {
 
             new_slice.push(buffer.value);
 
-            for _ in 0..(to - from) {
+
+            for _ in 0..(to - from -1 ) {
+
+
                 buffer = match buffer.next {
                     End => { panic!("index out of bounds") }
                     PNext(t) => { *t }
                 };
 
                 new_slice.push(buffer.value);
+
+
+
             };
 
             return new_slice;
@@ -387,6 +393,20 @@ pub mod tests {
         v.push(3);
 
         v.delete(1);
+    }
+
+    #[test]
+    fn rrr() {
+        let mut v = Vegie::new(vec![]);
+
+        v.push(5);
+        v.push(4);
+        v.push(3);
+
+
+        println!("{}", v.slice(0, 1));
+        println!("{}", v.slice(1, v.len));
+
     }
 
     #[test]

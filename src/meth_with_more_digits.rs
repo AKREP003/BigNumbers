@@ -126,6 +126,84 @@ pub mod dig {
 
         }
 
+        pub fn karatsubaMul (self, rhs: Self) -> Self {
+            let zero = IDig::new(0);
+
+            if rhs == zero || self == zero {
+                return zero;
+            };
+
+            let sig = if self.sign == rhs.sign { self.sign } else { false };
+
+
+            if self.body.len == 1 || rhs.body.len == 1 {
+                let mut r: isize = 0;
+
+                let mut dig_result = zero.clone();
+
+                for i in self.body.initiate_iter() {
+                    for j in rhs.body.initiate_iter() {
+                        let res = i * j;
+                        let current = res % BASE;
+                        let hand = (res - current) / BASE;
+
+                        dig_result = dig_result + IDig::from(Vegie::new(vec![current, hand]), 0 - r, sig);
+
+                        r += 1;
+                    }
+                }
+                //dig_result.rpoint = self.rpoint + rhs.rpoint ;
+                return dig_result;
+            };
+
+            let (mut v1, mut v2, _rp) = resize(&self, &rhs); //problem for the future
+
+            //for _ in 0 .. (v1.len % 2) { v1.push(0);v2.push(0); };
+
+            let middle = v1.len / 2;
+
+            let (x0, x1) = (IDig::from(v1.slice(0, middle - 1), 0, true), IDig::from(v1.slice(middle, v1.len - 1), 0, true));
+            let (y0, y1) = (IDig::from(v2.slice(0, middle - 1), 0, true), IDig::from(v2.slice(middle, v1.len - 1), 0, true));
+
+            let mut z2 = x1.clone() * y1.clone();
+
+            let mut z0 = x0.clone() * y0.clone();
+
+            let idk = ((x1.clone() + x0.clone()), (y1.clone() + y0.clone()), (z2.clone() + z0.clone()));
+
+            dbg!(&idk);
+
+            let mut z1 = (idk.0 * idk.1) - idk.2;
+
+
+
+            for _ in 0..middle {
+                z1.body.insert(0, 0);
+            }
+
+            for _ in 0..middle  {
+                z2.body.insert(0, 0);
+            }
+
+            dbg!(&z2 , &z1 , &z0);
+
+            let mut added = z2 + z1 + z0;
+
+            added.sign = sig;
+
+            added.rpoint =self.rpoint + rhs.rpoint ;
+
+            return added;
+        }
+
+        pub fn dividedToOne(self) -> Self{
+
+            let one = IDig::new(1);
+
+            return one / self
+
+        }
+
         pub fn slowDivision(&self, rhs: &Self) -> Self {
 
             if *rhs == IDig::new(0) {
@@ -195,7 +273,7 @@ pub mod dig {
 
     }
 
-    fn resize(n1: &IDig, n2: &IDig) -> (Vegie<u64>, Vegie<u64>, isize) {
+    pub fn resize(n1: &IDig, n2: &IDig) -> (Vegie<u64>, Vegie<u64>, isize) {
         let mut r1 = n1.body.clone();
 
         let mut r2 = n2.body.clone();
@@ -337,7 +415,7 @@ pub mod dig {
 
                     r1.update(k - v2, r1.len - i - 1);
 
-                    let mut v: Vegie<u64> = Vegie::new(vec![0; (i) as usize]);
+                    let mut v: Vegie<u64> = Vegie::new(vec![0; (r1.len - i) as usize]);
 
                     v.insert(1, 0);
 
@@ -440,22 +518,27 @@ pub mod dig {
     impl Mul for IDig {
         type Output = Self;
 
-        fn mul(self, rhs: Self) -> Self::Output { //Glory To Anatoly Karatsuba
+        fn mul(self, rhs: Self) -> Self::Output {
 
             let zero = IDig::new(0);
 
-            if rhs == zero || self == zero { // I am something of an optimizer myself
+            let mut added = IDig::new(0);
 
+            if rhs == zero || self == zero {
                 return zero;
             };
 
+
+
             let sig = if self.sign == rhs.sign { self.sign } else { false };
+
+            added.sign = sig;
+            added.rpoint = self.rpoint + rhs.rpoint ;
 
 
             if self.body.len == 1 || rhs.body.len == 1 {
                 let mut r: isize = 0;
 
-                let mut dig_result = zero.clone();
 
                 for i in self.body.initiate_iter() {
                     for j in rhs.body.initiate_iter() {
@@ -463,43 +546,37 @@ pub mod dig {
                         let current = res % BASE;
                         let hand = (res - current) / BASE;
 
-                        dig_result = dig_result + IDig::from(Vegie::new(vec![current, hand]), 0 - r, sig);
+                        added = added + IDig::from(Vegie::new(vec![current, hand]), 1 - r, sig);
 
                         r += 1;
                     }
                 }
-                //dig_result.rpoint = self.rpoint + rhs.rpoint ;
-                return dig_result;
+
+                return added;
             };
 
-            let (mut v1, mut v2, _rp) = resize(&self, &rhs); //problem for the future
 
-            //for _ in 0 .. (v1.len % 2) { v1.push(0);v2.push(0); };
 
-            let middle = v1.len / 2;
+            let mut iter = 0;
 
-            let (x0, x1) = (IDig::from(v1.slice(0, middle - 1), 0, true), IDig::from(v1.slice(middle, v1.len - 1), 0, true));
-            let (y0, y1) = (IDig::from(v2.slice(0, middle - 1), 0, true), IDig::from(v2.slice(middle, v1.len - 1), 0, true));
+            for i in self.body.initiate_iter() {
 
-            let mut z2 = x1.clone() * y1.clone();
+                let x1 = IDig::new(i as i64);
 
-            let mut z0 = x0.clone() * y0.clone();
+                let mut res = x1 * IDig::from(rhs.body.clone(), 0, sig);//rhs.clone();
 
-            let mut z1 = ((x1.clone() + x0.clone()) * (y1.clone() + y0.clone())) - (z2.clone() + z0.clone());
+                for _ in 0 .. iter {
 
-            for _ in 0..middle {
-                z1.body.insert(0, 0);
+                    res.body.insert(0,0);
+
+                };
+
+                iter += 1;
+
+                added = added + res
+
             }
 
-            for _ in 0..middle * 2 {
-                z2.body.insert(0, 0);
-            }
-
-            let mut added = z2 + z1 + z0;
-
-            added.sign = sig;
-
-            added.rpoint =self.rpoint + rhs.rpoint ;
 
             return added;
         }
@@ -557,9 +634,9 @@ pub mod tests {
 
     #[test]
     fn s() {
-        let mut v1: Vegie<u64> = Vegie::new(vec![6,1]);
+        let mut v1: Vegie<u64> = Vegie::new(vec![9]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![5,4,9,5]);
+        let mut v2: Vegie<u64> = Vegie::new(vec![1]);
 
 
         let I = IDig::from(v1.clone(), 0, true);
@@ -574,9 +651,9 @@ pub mod tests {
 
     #[test]
     fn a() {
-        let mut v1: Vegie<u64> = Vegie::new(vec![6]);
+        let mut v1: Vegie<u64> = Vegie::new(vec![1,5,1]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![0, 1]);
+        let mut v2: Vegie<u64> = Vegie::new(vec![2, 1]);
 
 
         let I = IDig::from(v1.clone(), 0, true);
@@ -619,18 +696,19 @@ pub mod tests {
 
     #[test]
     fn multip() {
-        let mut v1: Vegie<u64> = Vegie::new(vec![8,2]);
+        let mut v1: Vegie<u64> = Vegie::new(vec![9,1]);
 
-        let mut v2: Vegie<u64> = Vegie::new(vec![7, 2]);
-
-
-        let mut I = IDig::from(v1.clone(), 0, true);
+        let mut v2: Vegie<u64> = Vegie::new(vec![9,1]);
 
 
-        let D = IDig::from(v2.clone(), 0, true);
+        let mut I = IDig::from(v1, 1, true);
+
+
+        let D = IDig::from(v2, 0, true);
 
 
         println!("{}", I * D);
+
     }
 
     #[test]
@@ -654,4 +732,35 @@ pub mod tests {
         dbg!(r);
 
     }
+
+    #[test]
+    fn ItSlicesItDices() {
+
+        let lis = Vegie::new(vec![0, 1,2,3]);
+
+        let r = lis.slice(0,1);
+
+
+        dbg!(r);
+
+    }
+
+    #[test]
+    fn resiz() {
+
+        let mut v1: Vegie<u64> = Vegie::new(vec![5]);
+
+        let mut v2: Vegie<u64> = Vegie::new(vec![1]);
+
+
+        let mut I = IDig::from(v1, 1, true);
+
+
+        let D = IDig::from(v2, 0, true);
+
+        dbg!(resize(&I, &D));
+
+    }
 }
+
+fn main() {}
